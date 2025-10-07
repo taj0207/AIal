@@ -1,0 +1,80 @@
+openapi: 3.1.0
+info:
+  title: AIal API
+  version: 0.1.0
+servers:
+  - url: http://localhost:4000
+paths:
+  /v1/chat.sync:
+    post:
+      summary: Chat (non-stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+  /v1/chat.stream:
+    post:
+      summary: Chat (SSE)
+      responses:
+        '200':
+          description: Server-Sent Events stream
+  /v1/raw:
+    post:
+      summary: Raw passthrough
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RawRequest'
+      responses:
+        '200':
+          description: Provider-native response
+components:
+  schemas:
+    ChatMessage:
+      type: object
+      properties:
+        role: { type: string, enum: [system,user,assistant,tool] }
+        content: { type: string }
+    ChatRequest:
+      type: object
+      required: [model, input]
+      properties:
+        model: { type: string }
+        input:
+          type: array
+          items: { $ref: '#/components/schemas/ChatMessage' }
+        stream: { type: boolean }
+    ChatResponse:
+      type: object
+      properties:
+        id: { type: string }
+        model: { type: string }
+        provider: { type: string }
+        output:
+          type: array
+          items: { $ref: '#/components/schemas/ChatMessage' }
+    RawRequest:
+      type: object
+      required: [provider, raw_path, raw_method, raw_payload]
+      properties:
+        provider: { type: string }
+        target_model: { type: string }
+        raw_path: { type: string }
+        raw_method: { type: string, enum: [GET,POST] }
+        raw_headers:
+          type: object
+          additionalProperties: { type: string }
+        raw_payload:
+          type: object
+          additionalProperties: true

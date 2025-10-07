@@ -1,0 +1,8 @@
+services:
+  aial:
+    build: .
+    ports: ["4000:4000"]
+    environment:
+      - PORT=4000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AIAL_MASTER_KEY=sk-local-123

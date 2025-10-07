@@ -1,0 +1,21 @@
+syntax = "proto3";
+package aial.v1;
+
+message ChatMessage { string role = 1; string content = 2; }
+message ChatRequest {
+  string model = 1;
+  repeated ChatMessage input = 2;
+  bool stream = 3;
+}
+message ChatChunk { string type = 1; string delta = 2; }
+message ChatResponse {
+  string id = 1;
+  string model = 2;
+  string provider = 3;
+  repeated ChatMessage output = 4;
+}
+
+service Router {
+  rpc ChatStream (ChatRequest) returns (stream ChatChunk);
+  rpc ChatSync (ChatRequest) returns (ChatResponse);
+}
