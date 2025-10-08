@@ -1,5 +1,5 @@
 # Security Policy
 
-- 回報安全議題：security@aial.dev（範例）
-- 請勿於公開 issue 回報零時差漏洞
-- 目標 14 天內初步回覆
+- Report security issues to security@aial.dev (sample address).
+- Do not disclose zero day issues in public issues.
+- Target initial response time is 14 days.

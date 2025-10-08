@@ -1,22 +1,77 @@
-# AIal — AI Abstract Layer (Open Source, BYOK)
+# AIal - AI Abstract Layer (Open Source, BYOK)
 
-> 一個可本地或部署到 Cloud Run 的 **OpenAI 相容 + 自定義 API** 的多供應商 LLM 代理層。
-> 本專案 **不收費**、**不托管金鑰**，使用者 **Bring Your Own Key (BYOK)**。
+> An open source multi-provider LLM gateway with OpenAI-compatible and custom APIs that you can run locally or on Cloud Run.
+> The project is free to use, never stores your keys, and embraces the Bring Your Own Key (BYOK) model.
 
-## 特色
-- ✅ OpenAI 相容端點：`/v1/chat/completions`、`/v1/responses`
-- ✅ 自定義端點：`/v1/chat.sync`、`/v1/chat.stream`、`/v1/raw`（原樣透傳）
-- ✅ 多供應商 Adapter：OpenAI / Anthropic / xAI / Google（骨架）
-- ✅ Cloud Run 或 Docker 一鍵部署
-- ✅ BYOK：金鑰從環境變數或 Secret 注入，不落地
+## Features
+- OpenAI-compatible endpoints: `/v1/chat/completions`, `/v1/responses`
+- Custom endpoints: `/v1/chat.sync`, `/v1/chat.stream`, `/v1/raw` (passthrough)
+- Multi-provider adapters: OpenAI, Anthropic, xAI, Google
+- Model routing presets: Gemini 2.5, GPT-5, o3 and o4, Grok 4, Grok code fast 1, Claude 4 Plus (development echo responses by default)
+- Provider key detection: OpenAI, Google Gemini, xAI Grok, Anthropic Claude (falls back to echo when credentials are missing)
+- Cloud Run or Docker friendly deployment
+- BYOK environment variable or secret injection so credentials never persist on disk
 
-## 快速開始（Docker）
+## Quick start (Docker)
 ```bash
 docker build -t aial:dev .
-docker run --rm -p 4000:4000   -e AIAL_MASTER_KEY=sk-local-123   -e OPENAI_API_KEY=your-openai-key   aial:dev
+docker run --rm \
+  -p 4000:4000 \
+  -p 50051:50051 \
+  -e AIAL_MASTER_KEY=sk-local-123 \
+  -e OPENAI_API_KEY=your-openai-key \
+  aial:dev
 ```
 
+> Map port `50051` when you want to reach the Router over gRPC.
+
+### Provider configuration
+- OpenAI: `OPENAI_API_KEY` (optional `OPENAI_BASE_URL`, `OPENAI_ORG`, `OPENAI_PROJECT`)
+- Google Gemini: `GEMINI_API_KEY` or `GOOGLE_API_KEY` (optional `GEMINI_API_BASE_URL`)
+- xAI Grok: `XAI_API_KEY` or `GROK_API_KEY` (optional `XAI_API_BASE_URL`)
+- Anthropic Claude: `ANTHROPIC_API_KEY` (optional `ANTHROPIC_API_BASE_URL`, `ANTHROPIC_API_VERSION`, `ANTHROPIC_MAX_TOKENS`)
+
+> When none of the above environment variables are supplied the system still starts and responds with echo messages so you can test the API locally.
+
 ## API
-- OpenAPI 規格：`openapi/openapi.yaml`
-- gRPC（可選）：`proto/chat.proto`
-- 設計文件：`docs/system-design.md`
+- OpenAPI specification: `openapi/openapi.yaml` - the canonical AIal HTTP contract covering synchronous and streaming chat, OpenAI-compatible completions and responses, and the raw passthrough endpoint.
+- gRPC (optional): `proto/chat.proto` exposes the `aial.v1.Router` surface.
+
+### Using the REST API
+AIal mirrors the OpenAI authentication pattern: every request must include your master key in the `Authorization` header using the `Bearer` scheme.
+
+```bash
+curl -X POST http://localhost:4000/v1/chat.sync \
+  -H "Authorization: Bearer sk-local-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5-turbo",
+    "messages": [
+      { "role": "user", "content": "Say hello from AIal" }
+    ]
+  }'
+```
+
+All REST endpoints share the same authentication requirement:
+- `/v1/chat.sync` returns a single message payload.
+- `/v1/chat.stream` produces an SSE stream that you can read with any EventSource capable client.
+- `/v1/chat/completions` and `/v1/responses` accept OpenAI-compatible payloads for drop-in SDK usage.
+- `/v1/raw` forwards JSON directly to the selected provider for advanced control.
+
+### Using the gRPC API
+The gRPC transport is optional but enabled by default on `0.0.0.0:50051`. Install `@grpc/grpc-js` and `@grpc/proto-loader` in the daemon workspace to activate it, disable it by setting `AIAL_ENABLE_GRPC=false`, or rebind with `GRPC_HOST` and `GRPC_PORT`.
+
+Generate a client from `proto/chat.proto`, or use `grpcurl` for quick tests:
+
+```bash
+grpcurl -plaintext -d '{
+  "model": "gpt-5-turbo",
+  "messages": [{"role": "USER", "content": "Say hello from AIal"}]
+}' localhost:50051 aial.v1.Router/ChatSync
+```
+
+The gRPC server exposes two methods:
+- `ChatSync` mirrors the REST `/v1/chat.sync` response payload.
+- `ChatStream` yields a stream of partial messages comparable to `/v1/chat.stream`.
+
+System design reference: `docs/system-design.md`

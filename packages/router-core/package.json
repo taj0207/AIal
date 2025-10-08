@@ -2,15 +2,11 @@
   "name": "@aial/router-core",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.js",
   "scripts": {
-    "build": "tsc -b",
-    "dev": "tsc -w",
+    "build": "node -e \"console.log('router-core build noop')\"",
+    "dev": "node -e \"console.log('router-core dev noop')\"",
     "test": "node -e \"console.log('no tests yet')\""
   },
-  "dependencies": {},
-  "devDependencies": {
-    "typescript": "^5.4.0"
-  }
+  "dependencies": {}
 }

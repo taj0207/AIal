@@ -1,3 +1,3 @@
 # Contributing to AIal
 
-採用 Conventional Commits；PR 請附測試與說明。安全議題依 `SECURITY.md`。
+We follow Conventional Commits. Please include tests and a description with every pull request. Security issues should follow the guidance in `SECURITY.md`.

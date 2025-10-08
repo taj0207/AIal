@@ -1,0 +1,10 @@
+{
+  "name": "aial",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @aial/router-core && npm run build -w @aial/daemon"
+  }
+}
