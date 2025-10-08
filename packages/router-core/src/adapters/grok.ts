@@ -1,15 +1,18 @@
 import type { ChatMessage, ChatRequest, ChatResponse } from '../index.js';
 import { EchoAdapter } from './echo.js';
 
-type OpenAIMessageContent = string | Array<{ text?: string }>;
+interface GrokAdapterOptions {
+  apiKey?: string;
+  baseUrl?: string;
+}
 
-type OpenAIChatCompletion = {
+type GrokChatCompletion = {
   id?: string;
   model?: string;
   choices?: Array<{
     message?: {
       role?: ChatMessage['role'];
-      content?: OpenAIMessageContent;
+      content?: string;
     };
   }>;
 };
@@ -19,63 +22,43 @@ const normaliseModelName = (model: string): string => {
   return slash === -1 ? model : model.slice(slash + 1);
 };
 
-const normaliseChoiceContent = (content: OpenAIMessageContent | undefined): string => {
-  if (!content) return '';
-  if (typeof content === 'string') return content;
-  return content
-    .map((part: { text?: string }) => (typeof part?.text === 'string' ? part.text : ''))
-    .filter(Boolean)
-    .join('\n');
-};
-
-interface OpenAIAdapterOptions {
-  apiKey?: string;
-  baseUrl?: string;
-  organization?: string;
-  project?: string;
-}
-
-export class OpenAIAdapter extends EchoAdapter {
-  constructor(private readonly opts: OpenAIAdapterOptions = {}) {
-    super('openai');
+export class GrokAdapter extends EchoAdapter {
+  constructor(private readonly opts: GrokAdapterOptions = {}) {
+    super('grok');
   }
 
   override async chatSync(req: ChatRequest): Promise<ChatResponse> {
     if (!this.opts.apiKey) {
-      throw new Error('OpenAIAdapter requires an apiKey');
+      throw new Error('GrokAdapter requires an apiKey');
     }
 
-    const base = (this.opts.baseUrl ?? 'https://api.openai.com/v1').replace(/\/$/, '');
+    const base = (this.opts.baseUrl ?? 'https://api.x.ai/v1').replace(/\/$/, '');
     const providerModel = normaliseModelName(req.model);
 
     const response = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.opts.apiKey}`,
-        ...(this.opts.organization ? { 'OpenAI-Organization': this.opts.organization } : {}),
-        ...(this.opts.project ? { 'OpenAI-Project': this.opts.project } : {})
+        Authorization: `Bearer ${this.opts.apiKey}`
       },
       body: JSON.stringify({
         model: providerModel,
         messages: req.input.map((message) => ({
           role: message.role,
           content: message.content
-        })),
-        stream: false
+        }))
       })
     });
 
     if (!response.ok) {
       const reason = await response.text();
-      throw new Error(`OpenAIAdapter request failed (${response.status}): ${reason}`);
+      throw new Error(`GrokAdapter request failed (${response.status}): ${reason}`);
     }
 
-    const payload = (await response.json()) as OpenAIChatCompletion;
-
+    const payload = (await response.json()) as GrokChatCompletion;
     const output: ChatMessage[] = (payload.choices ?? []).map((choice) => ({
       role: choice.message?.role ?? 'assistant',
-      content: normaliseChoiceContent(choice.message?.content)
+      content: choice.message?.content ?? ''
     }));
 
     if (!output.length) {

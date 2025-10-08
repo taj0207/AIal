@@ -27,6 +27,38 @@ paths:
       responses:
         '200':
           description: Server-Sent Events stream
+  /v1/chat/completions:
+    post:
+      summary: OpenAI compatible chat completions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AialApiChatCompletionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AialApiChatCompletionResponse'
+  /v1/responses:
+    post:
+      summary: OpenAI responses (non-stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AialApiResponseRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AialApiResponse'
   /v1/raw:
     post:
       summary: Raw passthrough
@@ -78,3 +110,91 @@ components:
         raw_payload:
           type: object
           additionalProperties: true
+    AialApiChatMessage:
+      type: object
+      properties:
+        role: { type: string, enum: [system,user,assistant,tool] }
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+                properties:
+                  type: { type: string }
+                  text: { type: string }
+                  value: { type: string }
+                additionalProperties: true
+      required: [role, content]
+    AialApiChatCompletionRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model: { type: string }
+        stream: { type: boolean }
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/AialApiChatMessage' }
+    AialApiChatCompletionResponse:
+      type: object
+      properties:
+        id: { type: string }
+        object: { type: string }
+        created: { type: integer }
+        model: { type: string }
+        provider: { type: string }
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index: { type: integer }
+              message: { $ref: '#/components/schemas/ChatMessage' }
+              finish_reason: { type: string }
+        usage:
+          type: object
+          properties:
+            prompt_tokens: { type: integer }
+            completion_tokens: { type: integer }
+            total_tokens: { type: integer }
+    AialApiResponseRequest:
+      type: object
+      required: [model, input]
+      properties:
+        model: { type: string }
+        input:
+          oneOf:
+            - $ref: '#/components/schemas/AialApiChatMessage'
+            - type: array
+              items: { $ref: '#/components/schemas/AialApiChatMessage' }
+            - type: string
+    AialApiResponse:
+      type: object
+      properties:
+        id: { type: string }
+        object: { type: string }
+        created: { type: integer }
+        model: { type: string }
+        provider: { type: string }
+        output:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              type: { type: string }
+              role: { type: string }
+              content:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type: { type: string }
+                    text: { type: string }
+                  additionalProperties: true
+        usage:
+          type: object
+          properties:
+            prompt_tokens: { type: integer }
+            completion_tokens: { type: integer }
+            total_tokens: { type: integer }
