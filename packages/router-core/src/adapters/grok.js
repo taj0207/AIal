@@ -1,33 +1,17 @@
-import type { ChatMessage, ChatRequest, ChatResponse } from '../index.js';
 import { EchoAdapter } from './echo.js';
 
-interface GrokAdapterOptions {
-  apiKey?: string;
-  baseUrl?: string;
-}
-
-type GrokChatCompletion = {
-  id?: string;
-  model?: string;
-  choices?: Array<{
-    message?: {
-      role?: ChatMessage['role'];
-      content?: string;
-    };
-  }>;
-};
-
-const normaliseModelName = (model: string): string => {
+const normaliseModelName = (model) => {
   const slash = model.indexOf('/');
   return slash === -1 ? model : model.slice(slash + 1);
 };
 
 export class GrokAdapter extends EchoAdapter {
-  constructor(private readonly opts: GrokAdapterOptions = {}) {
+  constructor(opts = {}) {
     super('grok');
+    this.opts = opts;
   }
 
-  override async chatSync(req: ChatRequest): Promise<ChatResponse> {
+  async chatSync(req) {
     if (!this.opts.apiKey) {
       throw new Error('GrokAdapter requires an apiKey');
     }
@@ -55,8 +39,8 @@ export class GrokAdapter extends EchoAdapter {
       throw new Error(`GrokAdapter request failed (${response.status}): ${reason}`);
     }
 
-    const payload = (await response.json()) as GrokChatCompletion;
-    const output: ChatMessage[] = (payload.choices ?? []).map((choice) => ({
+    const payload = await response.json();
+    const output = (payload.choices ?? []).map((choice) => ({
       role: choice.message?.role ?? 'assistant',
       content: choice.message?.content ?? ''
     }));

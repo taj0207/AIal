@@ -59,7 +59,7 @@ All REST endpoints share the same authentication requirement:
 - `/v1/raw` forwards JSON directly to the selected provider for advanced control.
 
 ### Using the gRPC API
-The gRPC transport is optional but enabled by default on `0.0.0.0:50051`. You can disable it by setting `AIAL_ENABLE_GRPC=false` or rebind with `GRPC_HOST` and `GRPC_PORT`.
+The gRPC transport is optional but enabled by default on `0.0.0.0:50051`. Install `@grpc/grpc-js` and `@grpc/proto-loader` in the daemon workspace to activate it, disable it by setting `AIAL_ENABLE_GRPC=false`, or rebind with `GRPC_HOST` and `GRPC_PORT`.
 
 Generate a client from `proto/chat.proto`, or use `grpcurl` for quick tests:
 

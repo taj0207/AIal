@@ -1,30 +1,17 @@
-import type { ChatMessage, ChatRequest, ChatResponse } from '../index.js';
 import { EchoAdapter } from './echo.js';
 
-interface GeminiGenerativeContent {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
-    };
-  }>;
-}
-
-const normaliseModelName = (model: string): string => {
+const normaliseModelName = (model) => {
   const slash = model.indexOf('/');
   return slash === -1 ? model : model.slice(slash + 1);
 };
 
-interface GeminiAdapterOptions {
-  apiKey?: string;
-  baseUrl?: string;
-}
-
 export class GeminiAdapter extends EchoAdapter {
-  constructor(private readonly opts: GeminiAdapterOptions = {}) {
+  constructor(opts = {}) {
     super('gemini');
+    this.opts = opts;
   }
 
-  override async chatSync(req: ChatRequest): Promise<ChatResponse> {
+  async chatSync(req) {
     if (!this.opts.apiKey) {
       throw new Error('GeminiAdapter requires an apiKey');
     }
@@ -51,7 +38,7 @@ export class GeminiAdapter extends EchoAdapter {
       throw new Error(`GeminiAdapter request failed (${response.status}): ${reason}`);
     }
 
-    const payload = (await response.json()) as GeminiGenerativeContent;
+    const payload = await response.json();
 
     const outputText = (payload.candidates ?? [])
       .flatMap((candidate) => candidate.content?.parts ?? [])
@@ -59,7 +46,7 @@ export class GeminiAdapter extends EchoAdapter {
       .filter(Boolean)
       .join('\n');
 
-    const output: ChatMessage[] = [
+    const output = [
       {
         role: 'assistant',
         content: outputText

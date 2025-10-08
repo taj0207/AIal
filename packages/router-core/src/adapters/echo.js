@@ -1,9 +1,9 @@
-import type { ChatRequest, ChatResponse, ProviderAdapter } from '../index.js';
+export class EchoAdapter {
+  constructor(name) {
+    this.name = name;
+  }
 
-export class EchoAdapter implements ProviderAdapter {
-  constructor(public readonly name: string) {}
-
-  async chatSync(req: ChatRequest): Promise<ChatResponse> {
+  async chatSync(req) {
     return {
       id: `${this.name}-echo`,
       model: req.model,

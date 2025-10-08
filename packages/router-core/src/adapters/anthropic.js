@@ -1,29 +1,13 @@
-import type { ChatMessage, ChatRequest, ChatResponse } from '../index.js';
 import { EchoAdapter } from './echo.js';
 
-interface AnthropicMessageResponse {
-  id?: string;
-  model?: string;
-  content?: Array<{
-    text?: string;
-  }>;
-}
-
-interface AnthropicAdapterOptions {
-  apiKey?: string;
-  baseUrl?: string;
-  maxTokens?: number;
-  version?: string;
-}
-
-const normaliseModelName = (model: string): string => {
+const normaliseModelName = (model) => {
   const slash = model.indexOf('/');
   return slash === -1 ? model : model.slice(slash + 1);
 };
 
-const mapMessages = (messages: ChatMessage[]) => {
-  const systemParts: string[] = [];
-  const conversation = [] as Array<{ role: 'user' | 'assistant'; content: Array<{ type: 'text'; text: string }> }>;
+const mapMessages = (messages) => {
+  const systemParts = [];
+  const conversation = [];
 
   for (const message of messages) {
     if (message.role === 'system') {
@@ -43,11 +27,12 @@ const mapMessages = (messages: ChatMessage[]) => {
 };
 
 export class AnthropicAdapter extends EchoAdapter {
-  constructor(private readonly opts: AnthropicAdapterOptions = {}) {
+  constructor(opts = {}) {
     super('anthropic');
+    this.opts = opts;
   }
 
-  override async chatSync(req: ChatRequest): Promise<ChatResponse> {
+  async chatSync(req) {
     if (!this.opts.apiKey) {
       throw new Error('AnthropicAdapter requires an apiKey');
     }
@@ -76,7 +61,7 @@ export class AnthropicAdapter extends EchoAdapter {
       throw new Error(`AnthropicAdapter request failed (${response.status}): ${reason}`);
     }
 
-    const payload = (await response.json()) as AnthropicMessageResponse;
+    const payload = await response.json();
     const content = (payload.content ?? [])
       .map((part) => part.text ?? '')
       .filter(Boolean)

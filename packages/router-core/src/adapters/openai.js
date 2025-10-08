@@ -1,46 +1,26 @@
-import type { ChatMessage, ChatRequest, ChatResponse } from '../index.js';
 import { EchoAdapter } from './echo.js';
 
-type OpenAIMessageContent = string | Array<{ text?: string }>;
-
-type OpenAIChatCompletion = {
-  id?: string;
-  model?: string;
-  choices?: Array<{
-    message?: {
-      role?: ChatMessage['role'];
-      content?: OpenAIMessageContent;
-    };
-  }>;
-};
-
-const normaliseModelName = (model: string): string => {
+const normaliseModelName = (model) => {
   const slash = model.indexOf('/');
   return slash === -1 ? model : model.slice(slash + 1);
 };
 
-const normaliseChoiceContent = (content: OpenAIMessageContent | undefined): string => {
+const normaliseChoiceContent = (content) => {
   if (!content) return '';
   if (typeof content === 'string') return content;
   return content
-    .map((part: { text?: string }) => (typeof part?.text === 'string' ? part.text : ''))
+    .map((part) => (typeof part?.text === 'string' ? part.text : ''))
     .filter(Boolean)
     .join('\n');
 };
 
-interface OpenAIAdapterOptions {
-  apiKey?: string;
-  baseUrl?: string;
-  organization?: string;
-  project?: string;
-}
-
 export class OpenAIAdapter extends EchoAdapter {
-  constructor(private readonly opts: OpenAIAdapterOptions = {}) {
+  constructor(opts = {}) {
     super('openai');
+    this.opts = opts;
   }
 
-  override async chatSync(req: ChatRequest): Promise<ChatResponse> {
+  async chatSync(req) {
     if (!this.opts.apiKey) {
       throw new Error('OpenAIAdapter requires an apiKey');
     }
@@ -71,9 +51,9 @@ export class OpenAIAdapter extends EchoAdapter {
       throw new Error(`OpenAIAdapter request failed (${response.status}): ${reason}`);
     }
 
-    const payload = (await response.json()) as OpenAIChatCompletion;
+    const payload = await response.json();
 
-    const output: ChatMessage[] = (payload.choices ?? []).map((choice) => ({
+    const output = (payload.choices ?? []).map((choice) => ({
       role: choice.message?.role ?? 'assistant',
       content: normaliseChoiceContent(choice.message?.content)
     }));
