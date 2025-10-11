@@ -17,3 +17,4 @@ jobs:
       - run: npm -w packages/router-core -w packages/daemon ci
       - run: npm -w packages/router-core -w packages/daemon test --if-present
       - run: npm -w packages/router-core -w packages/daemon run build --if-present
+      - run: npm run check:examples
