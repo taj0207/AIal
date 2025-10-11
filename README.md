@@ -74,4 +74,15 @@ The gRPC server exposes two methods:
 - `ChatSync` mirrors the REST `/v1/chat.sync` response payload.
 - `ChatStream` yields a stream of partial messages comparable to `/v1/chat.stream`.
 
+### JavaScript quick start
+Run the local daemon (for example with Docker) and execute the sample script in `examples/chat-sync.mjs`. The script uses Node.js' built-in `fetch`, so Node 18+ is recommended.
+
+```bash
+# ensure the daemon is running locally on http://localhost:4000
+export AIAL_MASTER_KEY=sk-local-123
+node examples/chat-sync.mjs
+```
+
+You can override the host with `AIAL_URL` and supply a different master key via `AIAL_MASTER_KEY`.
+
 System design reference: `docs/system-design.md`
