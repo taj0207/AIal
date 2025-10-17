@@ -6,6 +6,6 @@
   ],
   "scripts": {
     "build": "npm run build -w @aial/router-core && npm run build -w @aial/daemon",
-    "check:examples": "node --check examples/chat-sync.mjs"
+    "check:examples": "node --check examples/chat-sync.mjs && node --check examples/library-usage.mjs"
   }
 }
