@@ -4,10 +4,27 @@
  *
  * Usage:
  *   node examples/library-usage.mjs
+ *
+ * Prerequisite:
+ *   npm install
  */
 
-import { Router, prefixMatcher } from '@aial/router-core';
-import { EchoAdapter } from '@aial/router-core/src/adapters/echo.js';
+let Router;
+let prefixMatcher;
+let EchoAdapter;
+
+try {
+  ({ Router, prefixMatcher } = await import('@aial/router-core'));
+  ({ EchoAdapter } = await import('@aial/router-core/src/adapters/echo.js'));
+} catch (error) {
+  if (error?.code === 'ERR_MODULE_NOT_FOUND') {
+    console.error(
+      'The @aial/router-core workspace dependency is missing. Run `npm install` from the repository root and try again.'
+    );
+    process.exit(1);
+  }
+  throw error;
+}
 
 async function main() {
   const router = new Router();

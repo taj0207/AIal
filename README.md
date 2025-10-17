@@ -75,7 +75,7 @@ The gRPC server exposes two methods:
 - `ChatStream` yields a stream of partial messages comparable to `/v1/chat.stream`.
 
 ### JavaScript quick start
-Run the local daemon (for example with Docker) and execute the sample script in `examples/chat-sync.mjs`. The script uses Node.js' built-in `fetch`, so Node 18+ is recommended.
+Install dependencies with `npm install`, run the local daemon (for example with Docker), and execute the sample script in `examples/chat-sync.mjs`. The script uses Node.js' built-in `fetch`, so Node 18+ is recommended.
 
 ```bash
 # ensure the daemon is running locally on http://localhost:4000
@@ -85,6 +85,6 @@ node examples/chat-sync.mjs
 
 You can override the host with `AIAL_URL` and supply a different master key via `AIAL_MASTER_KEY`.
 
-If you prefer to integrate the router directly as a library inside your own application, `examples/library-usage.mjs` demonstrates how to instantiate the `Router`, register adapters, and execute `chatSync` without running the daemon.
+If you prefer to integrate the router directly as a library inside your own application, `examples/library-usage.mjs` demonstrates how to instantiate the `Router`, register adapters, and execute `chatSync` without running the daemon. Run `npm install` first so Node.js can resolve the workspace packages.
 
 System design reference: `docs/system-design.md`
