@@ -85,4 +85,6 @@ node examples/chat-sync.mjs
 
 You can override the host with `AIAL_URL` and supply a different master key via `AIAL_MASTER_KEY`.
 
+If you prefer to integrate the router directly as a library inside your own application, `examples/library-usage.mjs` demonstrates how to instantiate the `Router`, register adapters, and execute `chatSync` without running the daemon.
+
 System design reference: `docs/system-design.md`
