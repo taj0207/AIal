@@ -42,3 +42,5 @@ export class Router {
     return adapter.chatSync(req);
   }
 }
+
+export { configureDefaultContext } from './context/default.js';
