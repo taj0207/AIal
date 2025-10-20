@@ -3,11 +3,11 @@
  * Minimal example demonstrating how to consume the AIal router-core library directly.
  *
  * Usage:
- *   OPENAI_API_KEY=sk-... node examples/library-usage.mjs
+ *   node examples/library-usage.mjs
  *
  * You can also pass a question via CLI arguments instead of the interactive
  * prompt:
- *   OPENAI_API_KEY=sk-... node examples/library-usage.mjs "What is AIal?"
+ *   node examples/library-usage.mjs "What is AIal?"
  *
  * Prerequisite:
  *   npm install
@@ -15,14 +15,14 @@
 
 let Router;
 let prefixMatcher;
-let OpenAIAdapter;
+let EchoAdapter;
 let createInterface;
 let input;
 let output;
 
 try {
   ({ Router, prefixMatcher } = await import('@aial/router-core'));
-  ({ OpenAIAdapter } = await import('@aial/router-core/src/adapters/openai.js'));
+  ({ EchoAdapter } = await import('@aial/router-core/src/adapters/echo.js'));
   ({ createInterface } = await import('node:readline/promises'));
   ({ stdin: input, stdout: output } = await import('node:process'));
 } catch (error) {
@@ -55,24 +55,17 @@ async function askForQuestion() {
 }
 
 async function main() {
-  const apiKey = process.env.OPENAI_API_KEY ?? process.env.AIAL_OPENAI_API_KEY;
-  if (!apiKey) {
-    console.error(
-      'Set the OPENAI_API_KEY (or AIAL_OPENAI_API_KEY) environment variable to run this example with the OpenAI adapter.'
-    );
-    process.exit(1);
-  }
-
   const router = new Router();
 
-  // Register the OpenAI adapter so every model prefixed with `openai/`
-  // is routed through OpenAI's API.
-  router.registerAdapter('openai', new OpenAIAdapter({ apiKey }), [prefixMatcher('openai/')]);
+  // Register a simple echo adapter for models that start with `local/`.
+  // Replace this with your own adapter (for example, wiring to the AIal
+  // daemon or a cloud provider) to run against a real LLM.
+  router.registerAdapter('local', new EchoAdapter('local'), [prefixMatcher('local/')]);
 
   const question = await askForQuestion();
 
   const response = await router.chatSync({
-    model: 'openai/gpt-4o-mini',
+    model: 'local/demo-assistant',
     input: [
       { role: 'system', content: 'You are a friendly assistant.' },
       { role: 'user', content: question }
